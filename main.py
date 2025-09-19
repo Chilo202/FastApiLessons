@@ -77,16 +77,15 @@ async def update_hotel_param(hotel_id: int,
     response.status_code = status.HTTP_400_BAD_REQUEST
     return {"status": 'error', 'message': f"There is no Hotel with id: {hotel_id}"}
 
-
 @app.delete('/hotels/{hotel_id}')
-async def get_hotel(hotel_id: int):
+async def delete_hotel(hotel_id: int):
     global hotels
     hotels = [hotel for hotel in hotels if hotel['id'] != hotel_id]
     return hotels
 
 
 @app.post("/hotels")
-def create_hotel(title: str = Body(embed=True), ):
+async def create_hotel(title: str = Body(embed=True), ):
     global hotels
     hotels.append({
         "id": hotels[-1]["id"] + 1,
