@@ -45,6 +45,7 @@ async def update_hotel_params(hotel_id: int,
                               title: str = Body(description='Hotel Title'),
                               name: str = Body(description="Hotel Name"),
                               ):
+    global hotels
     if not title or not name:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"status": 'error', 'message': "Title and Name is mandatory fields"}
