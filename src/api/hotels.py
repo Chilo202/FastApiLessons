@@ -1,6 +1,7 @@
 from fastapi.params import Query
 from fastapi import status, Response, APIRouter
-from schemas.hotels import Hotels, HotelsPatch
+from src.schemas.hotels import Hotels, HotelsPatch
+from src.api.dependencies import PaginationDep
 
 router = APIRouter(prefix='/hotels', tags=['Hotels'])
 
@@ -19,10 +20,9 @@ hotels = [
 # HOMEWORK #2
 @router.get('', response_model=list[Hotels])
 async def get_hotels(
+        pagination: PaginationDep,
         id: int | None = Query(None, description='Hotel Id'),
         title: str | None = Query(None, description='Hotel Title'),
-        page: int | None = Query(None, description='Start Page'),
-        per_page: int | None = Query(10, description='PerPage')
 ):
     hotels_ = []
     for hotel in hotels:
@@ -31,15 +31,15 @@ async def get_hotels(
         if title and hotel['title'] != title:
             continue
         hotels_.append(hotel)
-    if not page:
-        return hotels[:per_page]
+    if not pagination:
+        return hotels[:pagination.per_page]
     # PAGINATION LOGIC
-    if page:
-        start = (page - 1) * per_page
-        end = page * per_page
+    if pagination.page:
+        start = (pagination.page - 1) * pagination.per_page
+        end = pagination.page * pagination.per_page
         return hotels[start:end]
     else:
-        return hotels[:per_page]
+        return hotels[:pagination.per_page]
 
 
 @router.put("/{hotel_id}")
