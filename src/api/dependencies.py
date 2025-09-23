@@ -4,8 +4,8 @@ from typing import Annotated
 
 
 class PaginationParams(BaseModel):
-    page: Annotated[int | None, Query(None, gt=1)]
-    per_page: Annotated[int | None, Query(None, gt=1, lt=25)]
+    page: Annotated[int | None, Query(1, gt=0)]
+    per_page: Annotated[int | None, Query(None, gt=0, lt=25)]
 
 PaginationDep = Annotated[PaginationParams, Depends()]
 

@@ -11,12 +11,3 @@ class HotelsOrm(Base):
     title: Mapped[str] = mapped_column(String(100))
     location: Mapped[str]
 
-
-
-# class RoomsOrm(BaseOrm):
-#     __tablename__ = 'rooms'
-#
-#     id: Mapped[int] = mapped_column(primary_key=True)
-#     room_number:[int] = mapped_column(INTEGER())
-#     square: int = mapped_column()
-#     level: int = mapped_column()
