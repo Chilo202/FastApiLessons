@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from sqlalchemy import select
+from sqlalchemy import select, insert
 
 
 class BaseRepository:
@@ -19,4 +19,7 @@ class BaseRepository:
         res = await self.session.execute(query)
         return res.scalars().get_one_or_none()
 
-
+    async def add(self, **kwargs):
+        data = insert(self.model).values(**kwargs).returning(self.model)
+        res = await self.session.execute(data)
+        return res.scalars().first()
