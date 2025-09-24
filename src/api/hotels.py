@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from fastapi.params import Query
 from fastapi import status, Response, APIRouter, Body
 from repositories.hotels import HotelsRepository
@@ -29,10 +31,16 @@ async def update_hotel_params(hotel_id: int,
                               response: Response,
                               hotel_model: Hotels
                               ):
+    filter_by = {"id": hotel_id}
     async with async_session_maker() as session:
-        await HotelsRepository(session).edit(model_id=hotel_id, data=hotel_model)
+        res = await HotelsRepository(session).edit(data=hotel_model, **filter_by)
         await session.commit()
-
+        if len(res) == 0:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"status": "error", "message": "Not found"}
+        if len(res) > 1:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"status": "error", "message": f"More than one found objects with that params "}
     return {"status": "ok"}
 
 
@@ -56,11 +64,17 @@ async def update_hotel_param(hotel_id: int,
 
 
 @router.delete('/{hotel_id}')
-async def delete_hotel(hotel_id: int):
+async def delete_hotel(hotel_id: int, response: Response):
+    filter_by = {"id": hotel_id}
     async with async_session_maker() as session:
-        await HotelsRepository(session).delete(model_id=hotel_id)
+        res = await HotelsRepository(session).delete(model_id=hotel_id, **filter_by)
         await session.commit()
-
+    if len(res) == 0:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"status": "error", "message": "Not found"}
+    if len(res) > 1:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"status": "error", "message": f"More than one found objects with that params "}
     return {"status": "ok"}
 
 
