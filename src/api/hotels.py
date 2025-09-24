@@ -1,12 +1,9 @@
 from fastapi.params import Query
 from fastapi import status, Response, APIRouter, Body
-
 from repositories.hotels import HotelsRepository
 from src.database import async_session_maker
-from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotels, HotelsPatch
 from src.api.dependencies import PaginationDep
-from sqlalchemy import insert, select, func
 
 router = APIRouter(prefix='/hotels', tags=['Hotels'])
 
@@ -32,14 +29,11 @@ async def update_hotel_params(hotel_id: int,
                               response: Response,
                               hotel_model: Hotels
                               ):
-    global hotels
-    for hotel in hotels:
-        if hotel['id'] == hotel_id:
-            hotel['name'] = hotel_model.name
-            hotel['title'] = hotel_model.title
-            return hotels
-    response.status_code = status.HTTP_400_BAD_REQUEST
-    return {"status": 'error', 'message': f"There is no Hotel with id: {hotel_id}"}
+    async with async_session_maker() as session:
+        await HotelsRepository(session).edit(model_id=hotel_id, data=hotel_model)
+        await session.commit()
+
+    return {"status": "ok"}
 
 
 @router.patch("/{hotel_id}")
@@ -63,9 +57,11 @@ async def update_hotel_param(hotel_id: int,
 
 @router.delete('/{hotel_id}')
 async def delete_hotel(hotel_id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel['id'] != hotel_id]
-    return hotels
+    async with async_session_maker() as session:
+        await HotelsRepository(session).delete(model_id=hotel_id)
+        await session.commit()
+
+    return {"status": "ok"}
 
 
 @router.post("")
@@ -77,6 +73,6 @@ async def create_hotel(hotel_data: Hotels = Body(
                        {'title': "ColdJimmy", "location": "Bear street"}}
     })):
     async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).add(**hotel_data.model_dump())
+        hotel = await HotelsRepository(session).add(hotel_data)
         await session.commit()
     return {"status": "OK", "inserted_data": hotel}
