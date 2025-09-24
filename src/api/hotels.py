@@ -78,7 +78,6 @@ async def create_hotel(hotel_data: Hotels = Body(
         await session.commit()
     return {"status": "OK", "inserted_data": hotel}
 
-
 @router.get("/{hotel_id}")
 async def get_hotel(hotel_id: int):
     async with async_session_maker() as session:
