@@ -2,6 +2,7 @@
 from fastapi.params import Query
 from fastapi import status, Response, APIRouter, Body
 
+from repositories.hotels import HotelsRepository
 from src.database import async_session_maker
 from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotels, HotelsPatch
@@ -20,18 +21,12 @@ async def get_hotels(
 ):
     per_page = pagination.per_page or 5
     async with async_session_maker() as session:
-        query = select(HotelsOrm)
-        if title:
-            query = query.filter(func.lower(HotelsOrm.title).contains(func.lower(title)))
-        if location:
-            query = query.filter(func.lower(HotelsOrm.location).contains(func.lower(location)))
-        query = (
-            query
-            .limit(per_page)
-            .offset(per_page * (pagination.page - 1))
-        )
-        result = await session.execute(query)
-        return result.scalars().all()
+        return await HotelsRepository(session).get_all(
+            location=location,
+            title=title,
+            offset=per_page * (pagination.page - 1),
+            limit=per_page)
+
 
 
 @router.put("/{hotel_id}")
