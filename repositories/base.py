@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
+from sqlalchemy.exc import IntegrityError
 
 
 class BaseRepository:
@@ -24,9 +25,12 @@ class BaseRepository:
 
     async def add(self, data: BaseModel):
         add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        res = await self.session.execute(add_data_stmt)
-        model = res.scalars().one()
-        return self.schema.model_validate(model)
+        try:
+            res = await self.session.execute(add_data_stmt)
+            model = res.scalars().one()
+            return self.schema.model_validate(model)
+        except IntegrityError as e:
+            print(e)
 
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None:
         update_data_stmt = (update(self.model)
