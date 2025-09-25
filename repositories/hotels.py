@@ -1,10 +1,12 @@
 from repositories.base import BaseRepository
 from src.models.hotels import HotelsOrm
 from sqlalchemy import select, func
+from src.schemas.hotels import Hotels
 
 
 class HotelsRepository(BaseRepository):
     model = HotelsOrm
+    schema = Hotels
 
 
 
@@ -12,7 +14,7 @@ class HotelsRepository(BaseRepository):
                       location,
                       title,
                       limit,
-                      offset):
+                      offset) -> list[Hotels]:
 
         query = select(HotelsOrm)
         if title:
@@ -26,4 +28,4 @@ class HotelsRepository(BaseRepository):
         )
         print(query.compile(compile_kwargs={"literal_binds": True}))
         result = await self.session.execute(query)
-        return result.scalars().all()
+        return[self.schema.model_validate(model) for model in result.scalars().all()]

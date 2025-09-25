@@ -1,10 +1,15 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
-
-class Hotels(BaseModel):
+class HotelAdd(BaseModel):
     title: str
     location: str
+
+
+class Hotels(HotelAdd):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class HotelsPatch(BaseModel):
