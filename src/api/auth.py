@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response, Request
 
 from repositories.users import UsersRepository
 from src.database import async_session_maker
@@ -41,3 +41,6 @@ async def login_user(data: UserLogin, response: Response):
         return {"access_token": access_token}
 
 
+@router.get('/for_auth')
+def get_auth_user(request: Request):
+    return request.cookies.get('access_token') or None
