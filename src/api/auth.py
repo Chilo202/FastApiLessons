@@ -1,29 +1,43 @@
-import datetime
-
-from fastapi import APIRouter
+from datetime import datetime, timezone, timedelta
+from fastapi import APIRouter, HTTPException, Response
 
 from repositories.users import UsersRepository
 from src.database import async_session_maker
-from src.schemas.Users import UserRequestAdd, UserAdd
-from passlib.context import CryptContext
-
+from src.schemas.Users import UserRequestAdd, UserAdd, UserWithHashedPassword, UserLogin
+from src.services.auth import AuthService
 
 router = APIRouter(prefix='/auth', tags=["Authorization and Autification"])
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")
+
+
 
 
 @router.post("/register")
 async def register_user(data: UserRequestAdd):
-    hashed_password =pwd_context.hash(data.password)
+    hashed_password = AuthService().hash_password(data.password)
     new_user_data = UserAdd(
         hashed_password=hashed_password,
         first_name=data.first_name,
         last_name=data.last_name,
         email=data.email,
         nickname=data.nickname,
-    created_at=datetime.datetime.now())
+        created_at=datetime.now())
     async with async_session_maker() as session:
         await UsersRepository(session).add(new_user_data)
         await session.commit()
 
     return {"status": "OK"}
+
+
+@router.post("/login")
+async def login_user(data: UserLogin, response: Response):
+    async with async_session_maker() as session:
+        user = await UsersRepository(session).get_user_with_hashed_password(email=data.email)
+        if not user:
+            raise HTTPException(status_code=401, detail="Пользватель с таким майлом не найден")
+        if not AuthService().verify_password(data.password, user.hashed_password):
+            raise HTTPException(status_code=401, detail="Пароль не правильный")
+        access_token = AuthService().create_access_token({"user_id": user.id})
+        response.set_cookie("access_token", access_token)
+        return {"access_token": access_token}
+
+
