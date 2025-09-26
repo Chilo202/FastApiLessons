@@ -1,14 +1,12 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, Response, Request
-
+from src.api.dependencies import UserIdDep
 from repositories.users import UsersRepository
 from src.database import async_session_maker
-from src.schemas.Users import UserRequestAdd, UserAdd, UserWithHashedPassword, UserLogin
+from src.schemas.Users import UserRequestAdd, UserAdd, UserLogin
 from src.services.auth import AuthService
 
 router = APIRouter(prefix='/auth', tags=["Authorization and Autification"])
-
-
 
 
 @router.post("/register")
@@ -41,6 +39,10 @@ async def login_user(data: UserLogin, response: Response):
         return {"access_token": access_token}
 
 
-@router.get('/for_auth')
-def get_auth_user(request: Request):
-    return request.cookies.get('access_token') or None
+@router.get("/me")
+async def get_me(
+        user_id: UserIdDep):
+    async with async_session_maker() as session:
+        user = await UsersRepository(session).get_one_or_none(id=user_id)
+        return user
+
