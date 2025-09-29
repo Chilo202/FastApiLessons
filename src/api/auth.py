@@ -34,7 +34,7 @@ async def login_user(data: UserLogin, response: Response):
             raise HTTPException(status_code=401, detail="Пользватель с таким майлом не найден")
         if not AuthService().verify_password(data.password, user.hashed_password):
             raise HTTPException(status_code=401, detail="Пароль не правильный")
-        access_token = AuthService().create_access_token({"user_id": user.id})
+        access_token = AuthService().create_access_token({"user_id": user.id, "user_name": user.first_name})
         response.set_cookie("access_token", access_token)
         return {"access_token": access_token}
 

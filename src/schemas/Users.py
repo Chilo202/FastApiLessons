@@ -28,6 +28,8 @@ class UserLogin(BaseModel):
 class User(BaseModel):
     id:int
     email: EmailStr
+    first_name: str
+
 
     model_config = ConfigDict(from_attributes=True)
 

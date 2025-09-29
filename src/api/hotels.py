@@ -1,8 +1,8 @@
 from fastapi.params import Query
-from fastapi import status, Response, APIRouter, Body
+from fastapi import status, Response, APIRouter, Body, HTTPException
 from repositories.hotels import HotelsRepository
 from src.database import async_session_maker
-from src.schemas.hotels import Hotels, HotelsPatch, HotelAdd
+from src.schemas.hotels import  HotelsPatch, HotelAdd
 from src.api.dependencies import PaginationDep
 
 router = APIRouter(prefix='/hotels', tags=['Hotels'])
@@ -26,18 +26,13 @@ async def get_hotels(
 
 @router.put("/{hotel_id}")
 async def update_hotel_params(hotel_id: int,
-                              response: Response,
                               hotel_model: HotelAdd
                               ):
     async with async_session_maker() as session:
         res = await HotelsRepository(session).edit(data=hotel_model, id=hotel_id)
         await session.commit()
         if len(res) == 0:
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return {"status": "error", "message": "Not found"}
-        if len(res) > 1:
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return {"status": "error", "message": f"More than one found objects with that params "}
+            raise HTTPException(status_code=404, detail="Not found")
     return {"status": "ok"}
 
 

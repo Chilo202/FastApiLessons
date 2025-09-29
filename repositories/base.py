@@ -30,6 +30,7 @@ class BaseRepository:
             model = res.scalars().one()
             return self.schema.model_validate(model)
         except IntegrityError as e:
+            '''Need some really good solution for here'''
             print(e)
 
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None:
