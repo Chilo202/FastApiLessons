@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Response, Request
-from src.api.dependencies import UserIdDep
+from src.api.dependencies import UserIdDep, DBDep
 from repositories.users import UsersRepository
 from src.database import async_session_maker
 from src.schemas.Users import UserRequestAdd, UserAdd, UserLogin
@@ -10,7 +10,7 @@ router = APIRouter(prefix='/auth', tags=["Authorization and Autification"])
 
 
 @router.post("/register")
-async def register_user(data: UserRequestAdd):
+async def register_user(data: UserRequestAdd, db:DBDep ):
     hashed_password = AuthService().hash_password(data.password)
     new_user_data = UserAdd(
         hashed_password=hashed_password,
@@ -19,32 +19,28 @@ async def register_user(data: UserRequestAdd):
         email=data.email,
         nickname=data.nickname,
         created_at=datetime.now())
-    async with async_session_maker() as session:
-        await UsersRepository(session).add(new_user_data)
-        await session.commit()
+    await db.user.add(new_user_data)
+    await db.commit()
 
     return {"status": "OK"}
 
 
 @router.post("/login")
-async def login_user(data: UserLogin, response: Response):
-    async with async_session_maker() as session:
-        user = await UsersRepository(session).get_user_with_hashed_password(email=data.email)
-        if not user:
-            raise HTTPException(status_code=401, detail="Пользватель с таким майлом не найден")
-        if not AuthService().verify_password(data.password, user.hashed_password):
-            raise HTTPException(status_code=401, detail="Пароль не правильный")
-        access_token = AuthService().create_access_token({"user_id": user.id, "user_name": user.first_name})
-        response.set_cookie("access_token", access_token)
-        return {"access_token": access_token}
+async def login_user(data: UserLogin, response: Response, db: DBDep):
+    user = await db.user.get_user_with_hashed_password(email=data.email)
+    if not user:
+        raise HTTPException(status_code=401, detail="Пользватель с таким майлом не найден")
+    if not AuthService().verify_password(data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Пароль не правильный")
+    access_token = AuthService().create_access_token({"user_id": user.id, "user_name": user.first_name})
+    response.set_cookie("access_token", access_token)
+    return {"access_token": access_token}
 
 
 @router.get("/me")
 async def get_me(
-        user_id: UserIdDep):
-    async with async_session_maker() as session:
-        user = await UsersRepository(session).get_one_or_none(id=user_id)
-        return user
+        user_id: UserIdDep, db: DBDep):
+        return await db.user.get_one_or_none(id=user_id)
 
 @router.get("/logout")
 async def logout(response: Response):
