@@ -6,7 +6,10 @@ router = APIRouter(prefix="/bookings", tags=['Book room'])
 
 
 @router.post('')
-async def book_room(db: DBDep, user_id: UserIdDep, booking_data: BookingsAddRequest):
+async def book_room(db: DBDep,
+                    user_id: UserIdDep,
+                    booking_data: BookingsAddRequest
+                    ):
     room = await db.rooms.get_one_or_none(id=booking_data.room_id)
     if not room:
         raise HTTPException(status_code=404, detail=f'Room with id: {booking_data.room_id} not found')
@@ -15,5 +18,6 @@ async def book_room(db: DBDep, user_id: UserIdDep, booking_data: BookingsAddRequ
     _booking_data = BookingsRequest(user_id=user_id, price=room.price, **booking_data.model_dump())
     res = await db.bookings.add(_booking_data)
     await db.commit()
-    return res
+    return {"status": "OK", "data":res}
+
 
