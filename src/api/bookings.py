@@ -21,3 +21,12 @@ async def book_room(db: DBDep,
     return {"status": "OK", "data":res}
 
 
+
+@router.get('')
+async def get_all_bookings(db:DBDep):
+    return await db.bookings.get_all()
+
+
+@router.get('/me')
+async def get_my_bookings(db:DBDep, user_id: UserIdDep):
+    return await db.bookings.get_filtered(user_id=user_id)
