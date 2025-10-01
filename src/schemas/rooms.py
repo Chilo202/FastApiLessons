@@ -6,6 +6,7 @@ class RoomsAddRequest(BaseModel):
     description: str | None = None
     price: int = Field(gt=0, description="Price should be bigger 0")
     quantity: int = Field(gt=0, description="Rooms should be greater 0")
+    facilities_ids: list[int] | None = None
 
 
 class RoomsAdd(BaseModel):
@@ -21,6 +22,9 @@ class RoomPatchRequest(BaseModel):
     description: str | None = None
     price: int | None = Field(None, gt=0, description="Price should be bigger 0")
     quantity: int | None = Field(None, gt=0, description="Rooms should be greater 0")
+    facilities_ids: list[int] | None = None
+
+
 
 class RoomPatch(BaseModel):
     hotel_id: int | None = None
@@ -30,7 +34,7 @@ class RoomPatch(BaseModel):
     quantity: int | None = Field(None, gt=0, description="Rooms should be greater 0")
 
 
-class Rooms(RoomsAddRequest):
+class Rooms(RoomsAdd):
     id: int
 
     model_config = ConfigDict(from_attributes=True)

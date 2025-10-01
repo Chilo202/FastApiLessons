@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body
 from src.api.dependencies import DBDep
-from src.schemas.facilities import FacilitiesAddRequest
+from src.schemas.facility import FacilityAddRequest
 
 router = APIRouter(prefix='/facilities', tags=['Facilities'])
 
@@ -11,9 +11,9 @@ async def get_all_facilities(db: DBDep):
 
 
 @router.post('')
-async def add_facilities(
+async def add_facility(
         db: DBDep,
-        facilities_data: FacilitiesAddRequest = Body(
+        facilities_data: FacilityAddRequest = Body(
             openapi_examples={"Air_condition": {"value": {"title": "Air Condition"}
                                                 },
                               "Coffe_Machine": {"value": {"title": "Coffe Machine"}

@@ -39,6 +39,14 @@ class BaseRepository:
             '''Need some really good solution for here'''
             print(e)
 
+    async def add_bulk(self, data: list[BaseModel]):
+        add_data_stmt = insert(self.model).values([item.model_dump() for item in data]).returning(self.model)
+        try:
+            await self.session.execute(add_data_stmt)
+        except IntegrityError as e:
+            '''Need some really good solution for here'''
+            print(e)
+
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None:
         update_data_stmt = (update(self.model)
                             .filter_by(**filter_by)
@@ -51,3 +59,11 @@ class BaseRepository:
         delete_stmt = delete(self.model).filter_by(**filter_by).returning(self.model)
         res = await self.session.execute(delete_stmt)
         return res.scalars().all()
+
+
+
+
+
+
+
+
