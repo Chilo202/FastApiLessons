@@ -7,7 +7,6 @@ class UserRequestAdd(BaseModel):
     first_name: str
     last_name:str
     nickname:str
-    created_at: datetime
 
 
 class UserAdd(BaseModel):

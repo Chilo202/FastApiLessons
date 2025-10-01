@@ -1,13 +1,20 @@
 from fastapi import APIRouter, Body, HTTPException
+from fastapi.params import Query
+
 from src.api.dependencies import UserIdDep, DBDep
 from src.schemas.rooms import RoomsAddRequest, RoomsAdd, RoomPatchRequest, RoomPatch
+from datetime import date
 
 router = APIRouter(prefix='/hotel', tags=['Rooms'])
 
 
 @router.get("/{hotel_id}/rooms", description='Get Rooms')
-async def get_rooms(hotel_id: int, db: DBDep):
-    return await db.rooms.get_filtered(hotel_id=hotel_id)
+async def get_rooms(hotel_id: int,
+                    db: DBDep,
+                    date_from: date = Query(example='2025-09-30'),
+                    date_to: date = Query(example='2025-10-07')
+                    ):
+    return await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
 
 
 @router.get("/{hotel_id}/rooms/{room_id}")
