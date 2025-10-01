@@ -45,5 +45,5 @@ class HotelsRepository(BaseRepository):
             .select_from(RoomsOrm)
             .filter(RoomsOrm.id.in_(rooms_ids_to_get))
         )
-        # hotels_ids_to_get = (hotels_ids_to_get.limit(limit).offset(offset))
+        hotels_ids_to_get = (hotels_ids_to_get.limit(limit).offset(offset))
         return await self.get_filtered(HotelsOrm.id.in_(hotels_ids_to_get))
