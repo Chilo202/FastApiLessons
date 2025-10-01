@@ -11,10 +11,10 @@ router = APIRouter(prefix='/hotels', tags=['Hotels'])
 async def get_hotels(
         pagination: PaginationDep,
         db: DBDep,
-        title: str | None = Query(None, description='Hotel Title'),
-        location: str | None = Query(None, description='Hotel Location'),
-        date_from: date = Query(example='2025-09-30'),
-        date_to: date = Query(example='2025-10-07')
+        title: str | None = Query(None, description="Hotel Title"),
+        location: str | None = Query(None, description="Hotel Location"),
+        date_from: date = Query(example="2025-09-30"),
+        date_to: date = Query(example="2025-10-07")
 
 ):
 
@@ -39,7 +39,7 @@ async def update_hotel_params(hotel_id: int,
     await db.commit()
     if len(res) == 0:
         raise HTTPException(status_code=404, detail="Not found")
-    return {"status": "ok"}
+    return {"status": "OK"}
 
 
 @router.patch("/{hotel_id}")
