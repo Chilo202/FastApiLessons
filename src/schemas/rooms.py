@@ -6,7 +6,7 @@ class RoomsAddRequest(BaseModel):
     description: str | None = None
     price: int = Field(gt=0, description="Price should be bigger 0")
     quantity: int = Field(gt=0, description="Rooms should be greater 0")
-    facilities_ids: list[int] | None = None
+    facilities_ids: list[int] = []
 
 
 class RoomsAdd(BaseModel):
