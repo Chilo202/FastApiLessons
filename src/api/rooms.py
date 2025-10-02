@@ -12,16 +12,16 @@ router = APIRouter(prefix='/hotel', tags=['Rooms'])
 @router.get("/{hotel_id}/rooms", description='Get Rooms')
 async def get_rooms(hotel_id: int,
                     db: DBDep,
-                    date_from: date = Query(example='2025-09-30'),
-                    date_to: date = Query(example='2025-10-07')
+                    date_from:date = Query(example='2025-09-30'),
+                    date_to:date = Query(example='2025-10-07')
                     ):
     return await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
 
 
 @router.get("/{hotel_id}/rooms/{room_id}")
 async def get_room(hotel_id: int, room_id: int, db: DBDep):
-    res = await db.rooms.get_filtered(id=room_id, hotel_id=hotel_id)
-    if len(res) == 0:
+    res = await db.rooms.get_room_with_facilities(id=room_id, hotel_id=hotel_id)
+    if not res :
         raise HTTPException(status_code=404, detail=f"No data with hotel_id: {hotel_id} and room_id: {room_id}")
     return res
 

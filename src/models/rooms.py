@@ -1,7 +1,7 @@
 from src.database import Base
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import ForeignKey
-
+from repositories.facilities import FacilitiesOrm
 
 class RoomsOrm(Base):
     __tablename__ = "rooms"
@@ -12,3 +12,8 @@ class RoomsOrm(Base):
     description: Mapped[str | None]
     price: Mapped[int]
     quantity: Mapped[int]
+
+    facilities: Mapped[list["FacilitiesOrm"]] = relationship(
+        back_populates="rooms",
+        secondary="rooms_facilities"
+    )
