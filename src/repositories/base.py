@@ -29,7 +29,7 @@ class BaseRepository:
         model = res.scalars().one_or_none()
         if model is None:
             return None
-        print(query.compile(compile_kwargs={"literal_binds": True} ))
+        # print(query.compile(compile_kwargs={"literal_binds": True} ))
         return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel):
