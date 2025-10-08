@@ -1,7 +1,8 @@
-from passlib.context import CryptContext
-import jwt
 from datetime import datetime, timedelta, timezone
 from src.config import settings
+from passlib.context import CryptContext
+import jwt
+
 
 
 class AuthService:

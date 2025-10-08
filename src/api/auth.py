@@ -1,8 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Response, Request
 from src.api.dependencies import UserIdDep, DBDep
-from repositories.users import UsersRepository
-from src.database import async_session_maker
 from src.schemas.Users import UserRequestAdd, UserAdd, UserLogin
 from src.services.auth import AuthService
 

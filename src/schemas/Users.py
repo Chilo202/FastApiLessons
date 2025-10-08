@@ -28,10 +28,13 @@ class User(BaseModel):
     id:int
     email: EmailStr
     first_name: str
+    last_name: str
+    nickname: str
+    created_at: datetime
 
 
-    model_config = ConfigDict(from_attributes=True)
 
 class UserWithHashedPassword(User):
     hashed_password: str
 
+    model_config = ConfigDict(from_attributes=True)

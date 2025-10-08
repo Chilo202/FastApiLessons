@@ -1,17 +1,18 @@
-from repositories.base import BaseRepository
+from src.repositories.base import BaseRepository
 from src.models.facilities import FacilitiesOrm, RoomFacilitiesOrm
-from src.schemas.facility import Facility, RoomFacility
-from sqlalchemy import select, insert, update, delete
+from src.repositories.mappers.mappers import FacilityDataMapper, RoomFacilityDataMapper
+
+from sqlalchemy import select, insert, delete
 
 class FacilitiesRepository(BaseRepository):
     model = FacilitiesOrm
-    schema = Facility
+    mapper = FacilityDataMapper
 
 
 
 class RoomsFacilitiesRepository(BaseRepository):
     model = RoomFacilitiesOrm
-    schema = RoomFacility
+    mapper = RoomFacilityDataMapper
 
 
 

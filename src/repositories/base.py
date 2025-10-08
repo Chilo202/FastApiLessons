@@ -2,10 +2,12 @@ from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.exc import IntegrityError
 
+from src.repositories.mappers.base import DataMapper
+
 
 class BaseRepository:
     model = None
-    schema = None
+    mapper: DataMapper = None
 
     def __init__(self, session):
         self.session = session
@@ -16,7 +18,7 @@ class BaseRepository:
             .filter(*filter)
             .filter_by(**filter_by))
         res = await self.session.execute(query)
-        return [self.schema.model_validate(model) for model in res.scalars().all()]
+        return [self.mapper.map_to_domain_entity(model) for model in res.scalars().all()]
 
     async def get_all(self, *args, **kwargs):
         return await self.get_filtered()
@@ -27,14 +29,15 @@ class BaseRepository:
         model = res.scalars().one_or_none()
         if model is None:
             return None
-        return self.schema.model_validate(model)
+        print(query.compile(compile_kwargs={"literal_binds": True} ))
+        return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel):
         add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         try:
             res = await self.session.execute(add_data_stmt)
             model = res.scalars().one()
-            return self.schema.model_validate(model)
+            return self.mapper.map_to_domain_entity(model)
         except IntegrityError as e:
             '''Need some really good solution for here'''
             print(e)
@@ -59,11 +62,3 @@ class BaseRepository:
         delete_stmt = delete(self.model).filter_by(**filter_by).returning(self.model)
         res = await self.session.execute(delete_stmt)
         return res.scalars().all()
-
-
-
-
-
-
-
-
