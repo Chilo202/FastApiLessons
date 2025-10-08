@@ -16,17 +16,17 @@ def check_test_mode():
 
 @pytest.fixture(autouse=True, scope="session")
 async def setup_database():
-    # hotels = get_mock_data('tests/mock_hotels.json')
-    # rooms = get_mock_data('tests/mock_rooms.json')
+    hotels = get_mock_data('tests/mock_hotels.json')
+    rooms = get_mock_data('tests/mock_rooms.json')
     async with engine_nullable_pool.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-        # await conn.execute(insert(HotelsOrm), [hotel for hotel in hotels])
-        # await conn.execute(insert(RoomsOrm), [room for room in rooms])
+        await conn.execute(insert(HotelsOrm), [hotel for hotel in hotels])
+        await conn.execute(insert(RoomsOrm), [room for room in rooms])
 
-# def get_mock_data(json_path: str):
-#     with open(json_path, "r") as data:
-#         return json.loads(data.read())
+def get_mock_data(json_path: str):
+    with open(json_path, "r") as data:
+        return json.loads(data.read())
 
 
 @pytest.fixture(autouse=True, scope="session")
