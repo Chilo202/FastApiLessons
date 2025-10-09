@@ -17,7 +17,6 @@ class RoomsRepository(BaseRepository):
                                    hotel_id: int
                                    ):
         rooms_ids_to_get = rooms_ids_for_booking(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
-
         query = (select(self.model)
                  .options(selectinload(self.model.facilities))
                  .filter(RoomsOrm.id.in_(rooms_ids_to_get)))

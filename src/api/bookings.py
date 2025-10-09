@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException
+
+from src.Exceptions import RoomNotAvailable
 from src.api.dependencies import DBDep, UserIdDep
 from src.schemas.bookings import BookingsAddRequest, BookingsRequest
 
@@ -26,6 +28,9 @@ async def book_room(db: DBDep,
     if booking_data.date_from > booking_data.date_to:
         raise HTTPException(status_code=404, detail='date_from cannot be later than date_to')
     _booking_data = BookingsRequest(user_id=user_id, price=room.price, **booking_data.model_dump())
-    res = await db.bookings.add(_booking_data)
-    await db.commit()
-    return {"status": "OK", "data": res}
+    try:
+        res = await db.bookings.add_booking(_booking_data)
+        await db.commit()
+        return {"status": "OK", "data": res}
+    except RoomNotAvailable:
+        raise HTTPException(status_code=404, detail="Room not available for that period")

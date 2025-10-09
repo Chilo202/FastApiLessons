@@ -3,6 +3,8 @@ from fastapi import status, Response, APIRouter, Body, HTTPException
 from src.schemas.hotels import HotelsPatch, HotelAdd
 from src.api.dependencies import PaginationDep, DBDep
 from datetime import date
+from src.repositories.utils import rooms_ids_for_booking
+
 router = APIRouter(prefix='/hotels', tags=['Hotels'])
 
 
@@ -17,15 +19,14 @@ async def get_hotels(
         date_to: date = Query(example="2025-10-07")
 
 ):
-
     per_page = pagination.per_page or 5
     return await db.hotels.get_filtered_by_time(
         title=title,
         location=location,
         date_from=date_from,
         date_to=date_to,
-        offset= per_page * (pagination.page - 1),
-        limit = per_page
+        offset=per_page * (pagination.page - 1),
+        limit=per_page
 
     )
 
