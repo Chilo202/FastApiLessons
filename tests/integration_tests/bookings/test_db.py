@@ -1,7 +1,4 @@
-from src.models import BookingsOrm
-from src.repositories.bookings import BookingRepository
-from src.schemas.bookings import BookingsRequest, BookingsAddRequest, Bookings
-
+from src.schemas.bookings import BookingsRequest
 from datetime import date
 
 
