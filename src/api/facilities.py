@@ -2,7 +2,6 @@ import json
 
 from fastapi import APIRouter, Body
 from src.api.dependencies import DBDep
-from src.init import redis_manager
 from src.schemas.facility import FacilityAddRequest
 from fastapi_cache.decorator import cache
 
@@ -14,7 +13,7 @@ async def get_all_facilities(db: DBDep):
     res = await db.facilities.get_all()
     return res
 
-
+@cache(expire=10)
 @router.post('')
 async def add_facility(
         db: DBDep,
@@ -26,6 +25,6 @@ async def add_facility(
                               }
         )
 ):
-    await db.facilities.add(facilities_data)
+    new_added_data= await db.facilities.add(facilities_data)
     await db.commit()
-    return {"status": "OK"}
+    return {"status": "OK", "data": new_added_data}
