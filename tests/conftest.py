@@ -1,7 +1,9 @@
+import json
+from unittest import mock
+
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
 import pytest
 from httpx import AsyncClient, ASGITransport
-import json
-
 from src.api.dependencies import get_db
 from src.config import settings
 from src.database import Base, async_session_maker_null_pool
@@ -13,6 +15,7 @@ from src.schemas.rooms import RoomsAdd
 from src.schemas.facility import FacilityAddRequest
 from src.utils.db_manager import DBManager
 
+
 async def get_db_null_pull():
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
         yield db
@@ -22,8 +25,6 @@ async def get_db_null_pull():
 async def db():
     async for db in get_db_null_pull():
         yield db
-
-
 
 
 app.dependency_overrides[get_db] = get_db_null_pull
@@ -37,9 +38,6 @@ def get_mock_data(json_path: str):
 @pytest.fixture(scope='session', autouse=True)
 def check_test_mode():
     assert settings.MODE == "TEST"
-
-
-
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -61,18 +59,35 @@ async def setup_database(check_test_mode):
 
 
 @pytest.fixture(scope="session")
-async def ac() -> AsyncClient:
+async def ac():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
+
 
 @pytest.fixture(autouse=True, scope="session")
 async def register_user(ac, setup_database):
     await ac.post(
         "/auth/register",
         json={
-            "email": "test33@gmail.com",
-            "password": "test1234",
+            "email": settings.USER_EMAIL,
+            "password": settings.USER_PASSWORD,
             "first_name": "Gago",
             "last_name": "Beknazaryan",
             "nickname": "mr.robot"
         })
+
+
+@pytest.fixture(autouse=True,scope="session")
+async def authenticated_ac(ac, register_user):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.post("/auth/login",
+                json=
+                {"email":settings.USER_EMAIL,
+                 "password": settings.USER_PASSWORD
+                 }
+                      )
+        token = response.json().get("access_token")
+        assert ac.cookies.get("access_token") == token
+        yield ac
+
+
