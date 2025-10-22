@@ -1,5 +1,3 @@
-import json
-
 from fastapi import APIRouter, Body
 from src.api.dependencies import DBDep
 from src.schemas.facility import FacilityAddRequest

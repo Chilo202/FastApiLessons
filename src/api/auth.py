@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Response, Request
+from fastapi import APIRouter, HTTPException, Response
 from src.api.dependencies import UserIdDep, DBDep
 from src.schemas.Users import UserRequestAdd, UserAdd, UserLogin
 from src.services.auth import AuthService
@@ -37,7 +37,7 @@ async def login_user(data: UserLogin, response: Response, db: DBDep):
         response.set_cookie("access_token", access_token)
         return {"access_token": access_token}
     except:
-        HTTPException(status_code=400)
+        raise HTTPException(status_code=400)
 
 
 @router.get("/me")

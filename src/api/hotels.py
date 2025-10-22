@@ -3,7 +3,6 @@ from fastapi import status, Response, APIRouter, Body, HTTPException
 from src.schemas.hotels import HotelsPatch, HotelAdd
 from src.api.dependencies import PaginationDep, DBDep
 from datetime import date
-from src.repositories.utils import rooms_ids_for_booking
 
 router = APIRouter(prefix='/hotels', tags=['Hotels'])
 
@@ -62,7 +61,7 @@ async def delete_hotel(hotel_id: int, db: DBDep, response: Response):
         return {"status": "error", "message": "Not found"}
     if len(res) > 1:
         response.status_code = status.HTTP_400_BAD_REQUEST
-        return {"status": "error", "message": f"More than one found objects with that params "}
+        return {"status": "error", "message": f"More than one found objects with that params {res}"}
     return {"status": "ok"}
 
 

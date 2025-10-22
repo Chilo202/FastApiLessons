@@ -1,19 +1,18 @@
 import json
 from unittest import mock
-
-mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
-import pytest
-from httpx import AsyncClient, ASGITransport
+from src.main import app
 from src.api.dependencies import get_db
 from src.config import settings
 from src.database import Base, async_session_maker_null_pool
 from src.database import engine_nullable_pool
-from src.models import *
-from src.main import app
+from src.utils.db_manager import DBManager
 from src.schemas.hotels import HotelAdd
 from src.schemas.rooms import RoomsAdd
 from src.schemas.facility import FacilityAddRequest
-from src.utils.db_manager import DBManager
+import pytest
+from httpx import AsyncClient, ASGITransport
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
+from src.models import * #noqa F403
 
 
 async def get_db_null_pull():
@@ -25,9 +24,6 @@ async def get_db_null_pull():
 async def db():
     async for db in get_db_null_pull():
         yield db
-
-
-
 
 
 app.dependency_overrides[get_db] = get_db_null_pull
@@ -80,16 +76,15 @@ async def register_user(ac, setup_database):
         })
 
 
-@pytest.fixture(autouse=True,scope="session")
+@pytest.fixture(autouse=True, scope="session")
 async def authenticated_ac(ac, register_user):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.post("/auth/login",
-                json=
-                {"email":settings.USER_EMAIL,
-                 "password": settings.USER_PASSWORD
-                 }
+        await ac.post("/auth/login",
+                      json=
+                      {"email": settings.USER_EMAIL,
+                       "password": settings.USER_PASSWORD
+                       }
                       )
-        token = response.json().get("access_token")
         assert ac.cookies.get("access_token")
         yield ac
 
