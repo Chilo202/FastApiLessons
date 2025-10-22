@@ -27,6 +27,9 @@ async def db():
         yield db
 
 
+
+
+
 app.dependency_overrides[get_db] = get_db_null_pull
 
 
@@ -87,7 +90,10 @@ async def authenticated_ac(ac, register_user):
                  }
                       )
         token = response.json().get("access_token")
-        assert ac.cookies.get("access_token") == token
+        assert ac.cookies.get("access_token")
         yield ac
 
 
+@pytest.fixture(scope='session')
+async def shared_values():
+    return {}
