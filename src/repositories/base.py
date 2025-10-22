@@ -33,14 +33,13 @@ class BaseRepository:
         return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel):
-        add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         try:
+            add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
             res = await self.session.execute(add_data_stmt)
             model = res.scalars().one()
             return self.mapper.map_to_domain_entity(model)
         except IntegrityError as e:
-            '''Need some really good solution for here'''
-            print(e)
+            raise e
 
     async def add_bulk(self, data: list[BaseModel]):
         add_data_stmt = insert(self.model).values([item.model_dump() for item in data]).returning(self.model)

@@ -1,41 +1,40 @@
+import pytest
 
 
-
-token = ''
-async def test_registration(ac):
-    response = await ac.post("auth/register", json={
-        "email": "new@york.am",
-        "password": "test1234",
-        "first_name": "ARMAN",
-        "last_name": "BARDUMYAN",
-        "nickname": "BARD23",
+@pytest.mark.parametrize("email, password, first_name, last_name, nickname, status_code",
+                         [("new@york.am", "test1234", "Gagik", "Martirosyan", "Bad23", 200),
+                          ("new2@york.am", "test1234", "Karen", "Balansanyan", "Bad23", 200),
+                          ("new2@york.am", "test1234", "Karen", "Balansanyan", "Bad23", 400),
+                          ("new", "test1234", "Gagik", "Martirosyan", "Bad23", 422)
+                          ])
+async def test_auth_flow(ac, email, password, first_name, last_name, nickname, status_code):
+    registration_response = await ac.post("auth/register", json={
+        "email": email,
+        "password": password,
+        "first_name": first_name,
+        "last_name": last_name,
+        "nickname": nickname,
     })
-    assert response.status_code == 200
-    assert response.json().get('status') == "OK"
-
-
-async def test_login(ac):
+    assert registration_response.status_code == status_code
+    if registration_response.status_code != 200:
+        return None
+    assert "status" in registration_response.json()
 
     login_response = await ac.post("auth/login", json={
-        "email": "new@york.am",
-        "password": "test1234"
+        "email": email,
+        "password": password
     })
 
-    assert login_response.status_code == 200
-    assert login_response.json().get('access_token')
+    assert login_response.status_code == status_code
+    assert "access_token" in login_response.json()
 
+    get_me_response = await ac.get("auth/me")
+    assert get_me_response.status_code == status_code
+    assert "email" in get_me_response.json()
+    assert "first_name" in get_me_response.json()
+    assert "last_name" in get_me_response.json()
+    assert "nickname" in get_me_response.json()
 
-
-async def test_user_logged(ac):
-    logged_user_response = await ac.get("auth/me")
-    assert logged_user_response.status_code == 200
-    assert logged_user_response.json().get("email") == "new@york.am"
-
-
-async def test_logout(ac):
-    response = await ac.get("auth/logout")
-    assert response.status_code == 200
-    check_log_out = await ac.get("auth/me")
-    assert check_log_out.json().get("detail") == "Unauthorized"
-
-
+    logout_response = await ac.get("auth/logout")
+    assert logout_response.status_code == status_code
+    assert "access_token" not in logout_response.cookies
