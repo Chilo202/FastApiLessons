@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import date
 
+
 class BookingsAddRequest(BaseModel):
     room_id: int
     date_from: date
@@ -13,7 +14,6 @@ class BookingsRequest(BaseModel):
     date_to: date
     room_id: int
     price: int
-
 
 
 class Bookings(BookingsRequest):

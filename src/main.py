@@ -19,6 +19,7 @@ from src.api.facilities import router as facilities_router
 from src.api.images import router as images_router
 import uvicorn
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await redis_manager.connect()
@@ -26,6 +27,7 @@ async def lifespan(app: FastAPI):
 
     yield
     await redis_manager.close()
+
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router)
@@ -35,7 +37,9 @@ app.include_router(booking_router)
 app.include_router(facilities_router)
 
 app.include_router(images_router)
-@app.get('/')
+
+
+@app.get("/")
 async def status():
     return {"status": "Alive"}
 

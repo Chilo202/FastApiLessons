@@ -18,19 +18,18 @@ PaginationDep = Annotated[PaginationParams, Depends()]
 
 
 def get_token(request: Request):
-    token = request.cookies.get('access_token', None)
+    token = request.cookies.get("access_token", None)
     if not token:
-        raise HTTPException(status_code=401, detail='Unauthorized')
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return token
 
 
 def get_current_user_id(token: str = Depends(get_token)):
     data = AuthService().decode_jwt(token)
-    return data['user_id']
+    return data["user_id"]
 
 
 UserIdDep = Annotated[int, Depends(get_current_user_id)]
-
 
 
 async def get_db():

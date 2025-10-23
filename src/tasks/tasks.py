@@ -16,7 +16,7 @@ def test_task():
 
 @celery_instance.task
 def resize_image(image_path: str):
-    output_dir = 'src/static/images'
+    output_dir = "src/static/images"
     # Загружаем оригинальное изображение
     img = Image.open(image_path)
 
@@ -52,5 +52,5 @@ async def get_today_checkin_users_helper():
 
 @celery_instance.task(name="booking_today_checkin")
 def send_emails_to_users_with_today_checkin():
-    print('I am here')
+    print("I am here")
     asyncio.run(get_today_checkin_users_helper())

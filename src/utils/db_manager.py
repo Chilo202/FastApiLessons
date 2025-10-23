@@ -6,7 +6,6 @@ from src.repositories.facilities import FacilitiesRepository, RoomsFacilitiesRep
 
 
 class DBManager:
-
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
@@ -18,7 +17,7 @@ class DBManager:
         self.user = UsersRepository(self.session)
         self.bookings = BookingRepository(self.session)
         self.facilities = FacilitiesRepository(self.session)
-        self.rooms_facilities= RoomsFacilitiesRepository(self.session)
+        self.rooms_facilities = RoomsFacilitiesRepository(self.session)
 
         return self
 

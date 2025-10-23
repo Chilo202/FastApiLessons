@@ -15,5 +15,6 @@ class UsersOrm(Base):
     first_name: Mapped[str] = mapped_column(String(200))
     last_name: Mapped[str] = mapped_column(String(200))
     nickname: Mapped[str] = mapped_column(String(20))
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime,default=datetime.datetime.now)
-
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, default=datetime.datetime.now
+    )

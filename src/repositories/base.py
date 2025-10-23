@@ -1,9 +1,9 @@
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
-from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy.exc import IntegrityError, NoResultFound
+from typing import Sequence
 from src.repositories.mappers.base import DataMapper
-
+from src.exceptions import ObjectNotFoundException
 
 class BaseRepository:
     model = None
@@ -13,12 +13,11 @@ class BaseRepository:
         self.session = session
 
     async def get_filtered(self, *filter, **filter_by):
-        query = (
-            select(self.model)
-            .filter(*filter)
-            .filter_by(**filter_by))
+        query = select(self.model).filter(*filter).filter_by(**filter_by)
         res = await self.session.execute(query)
-        return [self.mapper.map_to_domain_entity(model) for model in res.scalars().all()]
+        return [
+            self.mapper.map_to_domain_entity(model) for model in res.scalars().all()
+        ]
 
     async def get_all(self, *args, **kwargs):
         return await self.get_filtered()
@@ -32,28 +31,48 @@ class BaseRepository:
         # print(query.compile(compile_kwargs={"literal_binds": True} ))
         return self.mapper.map_to_domain_entity(model)
 
+    async def get_one(self, **filter_by):
+        query = select(self.model).filter_by(**filter_by)
+        res = await self.session.execute(query)
+        try:
+            model = res.scalars().one()
+        except NoResultFound:
+            raise ObjectNotFoundException
+        return self.mapper.map_to_domain_entity(model)
+
+
     async def add(self, data: BaseModel):
         try:
-            add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
+            add_data_stmt = (
+                insert(self.model).values(**data.model_dump()).returning(self.model)
+            )
             res = await self.session.execute(add_data_stmt)
             model = res.scalars().one()
             return self.mapper.map_to_domain_entity(model)
         except IntegrityError as e:
             raise e
 
-    async def add_bulk(self, data: list[BaseModel]):
-        add_data_stmt = insert(self.model).values([item.model_dump() for item in data]).returning(self.model)
+    async def add_bulk(self, data: Sequence[BaseModel]):
+        add_data_stmt = (
+            insert(self.model)
+            .values([item.model_dump() for item in data])
+            .returning(self.model)
+        )
         try:
             await self.session.execute(add_data_stmt)
         except IntegrityError as e:
-            '''Need some really good solution for here'''
+            """Need some really good solution for here"""
             print(e)
 
-    async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None:
-        update_data_stmt = (update(self.model)
-                            .filter_by(**filter_by)
-                            .values(**data.model_dump(exclude_unset=exclude_unset))
-                            .returning(self.model))
+    async def edit(
+        self, data: BaseModel, exclude_unset: bool = False, **filter_by
+    ) -> None:
+        update_data_stmt = (
+            update(self.model)
+            .filter_by(**filter_by)
+            .values(**data.model_dump(exclude_unset=exclude_unset))
+            .returning(self.model)
+        )
         res = await self.session.execute(update_data_stmt)
         return res.scalars().all()
 

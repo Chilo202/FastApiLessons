@@ -3,7 +3,7 @@ import shutil
 
 from src.tasks.tasks import resize_image
 
-router = APIRouter(prefix='/images', tags=["Hotel Pictures"])
+router = APIRouter(prefix="/images", tags=["Hotel Pictures"])
 
 
 @router.post("")
