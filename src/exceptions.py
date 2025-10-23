@@ -12,3 +12,7 @@ class ObjectNotFoundException(AppErrors):
 
 class AllRoomsAreBookedException(AppErrors):
     detail = "No available room for booking"
+
+
+class DuplicateEntryError(AppErrors):
+    detail = "Record with this unique value already exists."

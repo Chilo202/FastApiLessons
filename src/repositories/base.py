@@ -3,7 +3,7 @@ from sqlalchemy import select, insert, update, delete
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from typing import Sequence
 from src.repositories.mappers.base import DataMapper
-from src.exceptions import ObjectNotFoundException
+from src.exceptions import ObjectNotFoundException, DuplicateEntryError
 
 class BaseRepository:
     model = None
@@ -42,15 +42,16 @@ class BaseRepository:
 
 
     async def add(self, data: BaseModel):
+        add_data_stmt = (
+            insert(self.model).values(**data.model_dump()).returning(self.model)
+        )
         try:
-            add_data_stmt = (
-                insert(self.model).values(**data.model_dump()).returning(self.model)
-            )
             res = await self.session.execute(add_data_stmt)
-            model = res.scalars().one()
-            return self.mapper.map_to_domain_entity(model)
-        except IntegrityError as e:
-            raise e
+        except IntegrityError:
+            raise DuplicateEntryError
+        model = res.scalars().one()
+        return self.mapper.map_to_domain_entity(model)
+
 
     async def add_bulk(self, data: Sequence[BaseModel]):
         add_data_stmt = (
@@ -74,9 +75,18 @@ class BaseRepository:
             .returning(self.model)
         )
         res = await self.session.execute(update_data_stmt)
-        return res.scalars().all()
+        try:
+            updated_data = res.scalars().all()
+            return updated_data
+        except IntegrityError:
+            raise  ObjectNotFoundException
 
-    async def delete(self, **filter_by) -> None:
+    async def delete(self, **filter_by):
+        find_one = await self.session.execute(select(self.model).filter_by(**filter_by))
+        try:
+            find_one.scalars().one()
+        except NoResultFound:
+            raise ObjectNotFoundException
         delete_stmt = delete(self.model).filter_by(**filter_by).returning(self.model)
         res = await self.session.execute(delete_stmt)
-        return res.scalars().all()
+        return res.scalars().one()

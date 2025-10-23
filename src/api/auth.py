@@ -3,26 +3,27 @@ from fastapi import APIRouter, HTTPException, Response
 from src.api.dependencies import UserIdDep, DBDep
 from src.schemas.Users import UserRequestAdd, UserAdd, UserLogin
 from src.services.auth import AuthService
+from src.exceptions import DuplicateEntryError
 
 router = APIRouter(prefix="/auth", tags=["Authorization and Autification"])
 
 
 @router.post("/register")
 async def register_user(data: UserRequestAdd, db: DBDep):
+    hashed_password = AuthService().hash_password(data.password)
+    new_user_data = UserAdd(
+        hashed_password=hashed_password,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        email=data.email,
+        nickname=data.nickname,
+        created_at=datetime.now(),
+    )
     try:
-        hashed_password = AuthService().hash_password(data.password)
-        new_user_data = UserAdd(
-            hashed_password=hashed_password,
-            first_name=data.first_name,
-            last_name=data.last_name,
-            email=data.email,
-            nickname=data.nickname,
-            created_at=datetime.now(),
-        )
         await db.user.add(new_user_data)
-        await db.commit()
-    except:
-        raise HTTPException(status_code=400)
+    except DuplicateEntryError:
+        raise HTTPException(status_code=409, detail="User with this email already exists")
+    await db.commit()
     return {"status": "OK"}
 
 

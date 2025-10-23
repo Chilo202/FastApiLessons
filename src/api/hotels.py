@@ -18,6 +18,8 @@ async def get_hotels(
     date_to: date = Query(example="2025-10-07"),
 ):
     per_page = pagination.per_page or 5
+    if date_to < date_from:
+        raise HTTPException(status_code=400,detail="Check-out date cannot be earlier than check-in date")
     return await db.hotels.get_filtered_by_time(
         title=title,
         location=location,
