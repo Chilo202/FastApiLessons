@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Response
 from src.api.dependencies import UserIdDep, DBDep
 from src.schemas.Users import UserRequestAdd, UserAdd, UserLogin
 from src.services.auth import AuthService
-from src.exceptions import DuplicateEntryError
+from src.exceptions import ObjectAlreadyExists
 
 router = APIRouter(prefix="/auth", tags=["Authorization and Autification"])
 
@@ -21,7 +21,7 @@ async def register_user(data: UserRequestAdd, db: DBDep):
     )
     try:
         await db.user.add(new_user_data)
-    except DuplicateEntryError:
+    except ObjectAlreadyExists:
         raise HTTPException(status_code=409, detail="User with this email already exists")
     await db.commit()
     return {"status": "OK"}
@@ -29,21 +29,19 @@ async def register_user(data: UserRequestAdd, db: DBDep):
 
 @router.post("/login")
 async def login_user(data: UserLogin, response: Response, db: DBDep):
-    try:
-        user = await db.user.get_user_with_hashed_password(email=data.email)
-        if not user:
-            raise HTTPException(
-                status_code=401, detail="Пользватель с таким майлом не найден"
-            )
-        if not AuthService().verify_password(data.password, user.hashed_password):
-            raise HTTPException(status_code=401, detail="Пароль не правильный")
-        access_token = AuthService().create_access_token(
-            {"user_id": user.id, "user_name": user.first_name}
+    user = await db.user.get_user_with_hashed_password(email=data.email)
+    if not user:
+        raise HTTPException(
+            status_code=404, detail="Пользватель с таким майлом не найден"
         )
-        response.set_cookie("access_token", access_token)
-        return {"access_token": access_token}
-    except:
-        raise HTTPException(status_code=400)
+    if not AuthService().verify_password(data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Пароль не правильный")
+    access_token = AuthService().create_access_token(
+        {"user_id": user.id, "user_name": user.first_name}
+    )
+    response.set_cookie("access_token", access_token)
+    return {"access_token": access_token}
+
 
 
 @router.get("/me")

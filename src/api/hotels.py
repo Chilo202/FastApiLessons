@@ -1,5 +1,7 @@
 from fastapi.params import Query
 from fastapi import status, Response, APIRouter, Body, HTTPException
+
+from src.exceptions import check_date_to_after_date_from, ObjectNotFoundException, HotelNotFound
 from src.schemas.hotels import HotelsPatch, HotelAdd
 from src.api.dependencies import PaginationDep, DBDep
 from datetime import date
@@ -10,16 +12,15 @@ router = APIRouter(prefix="/hotels", tags=["Hotels"])
 # HOMEWORK #2
 @router.get("")
 async def get_hotels(
-    pagination: PaginationDep,
-    db: DBDep,
-    title: str | None = Query(None, description="Hotel Title"),
-    location: str | None = Query(None, description="Hotel Location"),
-    date_from: date = Query(example="2025-09-30"),
-    date_to: date = Query(example="2025-10-07"),
+        pagination: PaginationDep,
+        db: DBDep,
+        title: str | None = Query(None, description="Hotel Title"),
+        location: str | None = Query(None, description="Hotel Location"),
+        date_from: date = Query(example="2025-09-30"),
+        date_to: date = Query(example="2025-10-07"),
 ):
+    check_date_to_after_date_from(date_to, date_from)
     per_page = pagination.per_page or 5
-    if date_to < date_from:
-        raise HTTPException(status_code=400,detail="Check-out date cannot be earlier than check-in date")
     return await db.hotels.get_filtered_by_time(
         title=title,
         location=location,
@@ -32,16 +33,20 @@ async def get_hotels(
 
 @router.put("/{hotel_id}")
 async def update_hotel_params(hotel_id: int, db: DBDep, hotel_model: HotelAdd):
-    res = await db.hotels.edit(data=hotel_model, id=hotel_id)
+    try:
+        await db.hotels.edit(data=hotel_model, id=hotel_id)
+    except ObjectNotFoundException:
+        raise HotelNotFound
     await db.commit()
-    if len(res) == 0:
-        raise HTTPException(status_code=404, detail="Not found")
     return {"status": "OK"}
 
 
 @router.patch("/{hotel_id}")
 async def update_hotel_param(hotel_id: int, db: DBDep, hotel_data: HotelsPatch):
-    await db.hotels.edit(data=hotel_data, exclude_unset=True, id=hotel_id)
+    try:
+        await db.hotels.edit(data=hotel_data, exclude_unset=True, id=hotel_id)
+    except ObjectNotFoundException:
+        raise HotelNotFound
     await db.commit()
 
     return {"status": "OK"}
@@ -49,11 +54,12 @@ async def update_hotel_param(hotel_id: int, db: DBDep, hotel_data: HotelsPatch):
 
 @router.delete("/{hotel_id}")
 async def delete_hotel(hotel_id: int, db: DBDep, response: Response):
+    try:
+        db.hotels.get_one(id=hotel_id)
+    except ObjectNotFoundException:
+        raise HotelNotFound
     res = await db.hotels.delete(id=hotel_id)
     await db.commit()
-    if len(res) == 0:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {"status": "error", "message": "Not found"}
     if len(res) > 1:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {
@@ -65,13 +71,13 @@ async def delete_hotel(hotel_id: int, db: DBDep, response: Response):
 
 @router.post("")
 async def create_hotel(
-    db: DBDep,
-    hotel_data: HotelAdd = Body(
-        openapi_examples={
-            "NewJersey": {"value": {"title": "FreeJersey", "location": "12 ayre str."}},
-            "Alyska": {"value": {"title": "ColdJimmy", "location": "Bear street"}},
-        }
-    ),
+        db: DBDep,
+        hotel_data: HotelAdd = Body(
+            openapi_examples={
+                "NewJersey": {"value": {"title": "FreeJersey", "location": "12 ayre str."}},
+                "Alyska": {"value": {"title": "ColdJimmy", "location": "Bear street"}},
+            }
+        ),
 ):
     hotel = await db.hotels.add(hotel_data)
     await db.commit()
@@ -80,5 +86,7 @@ async def create_hotel(
 
 @router.get("/{hotel_id}")
 async def get_hotel(hotel_id: int, db: DBDep):
-    hotel = await db.hotels.get_one_or_none(id=hotel_id)
-    return {"status": "OK", "hotel": hotel}
+    try:
+        return await db.hotels.get_one(id=hotel_id)
+    except ObjectNotFoundException:
+        raise HotelNotFound

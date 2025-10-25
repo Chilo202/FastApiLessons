@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from src.exceptions import ObjectNotFoundException, AllRoomsAreBookedException
+from src.exceptions import ObjectNotFoundException, AllRoomsAreBookedException, check_date_to_after_date_from
 from src.api.dependencies import DBDep, UserIdDep
 from src.schemas.bookings import BookingsAddRequest, BookingsRequest
 
@@ -24,10 +24,7 @@ async def book_room(db: DBDep, user_id: UserIdDep, booking_data: BookingsAddRequ
     except ObjectNotFoundException:
         raise HTTPException(status_code=404, detail="Room not found")
     hotel = await db.hotels.get_one_or_none(id=room.hotel_id)
-    if booking_data.date_from > booking_data.date_to:
-        raise HTTPException(
-            status_code=404, detail="date_from cannot be later than date_to"
-        )
+    check_date_to_after_date_from(booking_data.date_to, booking_data.date_from)
     _booking_data = BookingsRequest(
         user_id=user_id, price=room.price, **booking_data.model_dump()
     )

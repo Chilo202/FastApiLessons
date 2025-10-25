@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.exc import IntegrityError, NoResultFound
+from asyncpg.exceptions import UniqueViolationError
 from typing import Sequence
 from src.repositories.mappers.base import DataMapper
-from src.exceptions import ObjectNotFoundException, DuplicateEntryError
+from src.exceptions import ObjectNotFoundException, DuplicateEntryError, ObjectAlreadyExists
+
 
 class BaseRepository:
     model = None
@@ -20,7 +22,7 @@ class BaseRepository:
         ]
 
     async def get_all(self, *args, **kwargs):
-        return await self.get_filtered()
+        return await self.get_filtered(*args, **kwargs)
 
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
@@ -47,8 +49,11 @@ class BaseRepository:
         )
         try:
             res = await self.session.execute(add_data_stmt)
-        except IntegrityError:
-            raise DuplicateEntryError
+        except IntegrityError as ex:
+            if isinstance(ex.orig.__cause__, UniqueViolationError):
+                raise ObjectAlreadyExists from ex
+            else:
+                raise ex
         model = res.scalars().one()
         return self.mapper.map_to_domain_entity(model)
 
