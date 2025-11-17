@@ -1,5 +1,4 @@
 from sqlalchemy import func, select, Select
-from src.database import engine
 from src.models.booking import BookingsOrm
 from src.models.rooms import RoomsOrm
 from datetime import date
@@ -41,6 +40,6 @@ def rooms_ids_for_booking(date_from: date, date_to: date, hotel_id: int | None =
         )
     )
 
-    #print(rooms_ids_to_get.compile(bind=engine, compile_kwargs={"literal_binds": True}))
+    # print(rooms_ids_to_get.compile(bind=engine, compile_kwargs={"literal_binds": True}))
 
     return rooms_ids_to_get

@@ -6,7 +6,7 @@ import pytest
     (1, "2025-10-10", "2025-10-17", 200),
     (1, "2025-10-10", "2025-10-17", 200),
     (1, "2025-10-10", "2025-10-17", 200),
-    (1, "2025-10-10", "2025-10-17", 500)])
+    (1, "2025-10-10", "2025-10-17", 409)])
 async def test_add_booking(db, authenticated_ac, room_id, date_from, date_to, status_code):
     room_id = (await db.rooms.get_all())[0].id
     response = await authenticated_ac.post(

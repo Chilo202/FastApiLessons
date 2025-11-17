@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.parametrize("email, password, first_name, last_name, nickname, status_code",
                          [("new@york.am", "test1234", "Gagik", "Martirosyan", "Bad23", 200),
                           ("new2@york.am", "test1234", "Karen", "Balansanyan", "Bad23", 200),
-                          ("new2@york.am", "test1234", "Karen", "Balansanyan", "Bad23", 400),
+                          ("new2@york.am", "test1234", "Karen", "Balansanyan", "Bad23", 409),
                           ("new", "test1234", "Gagik", "Martirosyan", "Bad23", 422)
                           ])
 async def test_auth_flow(ac, email, password, first_name, last_name, nickname, status_code):

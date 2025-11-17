@@ -6,11 +6,8 @@ from pathlib import Path
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-
-
 sys.path.append(str(Path(__file__).parent.parent))
 from src.init import redis_manager
-
 from src.api.auth import router as auth_router
 from src.api.hotels import router as hotel_router
 from src.api.rooms import router as room_router
