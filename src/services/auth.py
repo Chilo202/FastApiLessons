@@ -2,7 +2,8 @@ from datetime import datetime, timedelta, timezone
 from src.config import settings
 from passlib.context import CryptContext
 import jwt
-
+from jwt.exceptions import ExpiredSignatureError
+from src.exceptions import SignatureExpiredException
 
 class AuthService:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -25,7 +26,8 @@ class AuthService:
         return self.pwd_context.verify(plain_password, hashed_password)
 
     def decode_jwt(self, token: str) -> dict:
-        return jwt.decode(
+        try: return jwt.decode(
             token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
-
+        except ExpiredSignatureError:
+            raise SignatureExpiredException

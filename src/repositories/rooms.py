@@ -41,6 +41,4 @@ class RoomsRepository(BaseRepository):
             model = res.scalars().one()
         except NoResultFound:
             raise ObjectNotFoundException
-        # if model is None:
-        #     return None
         return RoomDataWithRelsMapper.map_to_domain_entity(model)

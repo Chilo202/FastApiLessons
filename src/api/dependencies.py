@@ -7,7 +7,7 @@ from starlette.exceptions import HTTPException
 from src.database import async_session_maker
 from src.services.auth import AuthService
 from src.utils.db_manager import DBManager
-
+from src.exceptions import SignatureExpiredExceptionHttp, SignatureExpiredException
 
 class PaginationParams(BaseModel):
     page: Annotated[int | None, Query(1, gt=0)]
@@ -25,8 +25,11 @@ def get_token(request: Request):
 
 
 def get_current_user_id(token: str = Depends(get_token)):
-    data = AuthService().decode_jwt(token)
-    return data["user_id"]
+    try:
+        data = AuthService().decode_jwt(token)
+        return data["user_id"]
+    except SignatureExpiredException:
+        raise SignatureExpiredExceptionHttp
 
 
 UserIdDep = Annotated[int, Depends(get_current_user_id)]

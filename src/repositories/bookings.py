@@ -1,6 +1,6 @@
 from datetime import date
 from sqlalchemy import select
-from src.exceptions import ObjectNotFoundException
+from src.exceptions import ObjectNotFoundException, AllRoomsAreBookedException
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import BookingDataMapper
 from src.models.booking import BookingsOrm
@@ -30,4 +30,4 @@ class BookingRepository(BaseRepository):
         if data.room_id in available_rooms_ids:
             return await self.add(data)
 
-        raise ObjectNotFoundException("Room is booked")
+        raise AllRoomsAreBookedException("Room is booked")

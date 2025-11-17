@@ -27,6 +27,7 @@ class RoomsFacilitiesRepository(BaseRepository):
             set(facilities_ids) - set(current_facilities_ids)
         )
 
+
         if ids_to_delete:
             delete_m2m_facilities_stmt = delete(self.model).filter(
                 self.model.room_id == room_id, self.model.facility_id.in_(ids_to_delete)

@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from asyncpg.exceptions import UniqueViolationError
 from typing import Sequence
 from src.repositories.mappers.base import DataMapper
-from src.exceptions import ObjectNotFoundException, DuplicateEntryError, ObjectAlreadyExists
+from src.exceptions import ObjectNotFoundException, ObjectAlreadyExists
 
 
 class BaseRepository:
@@ -42,7 +42,6 @@ class BaseRepository:
             raise ObjectNotFoundException
         return self.mapper.map_to_domain_entity(model)
 
-
     async def add(self, data: BaseModel):
         add_data_stmt = (
             insert(self.model).values(**data.model_dump()).returning(self.model)
@@ -57,7 +56,6 @@ class BaseRepository:
         model = res.scalars().one()
         return self.mapper.map_to_domain_entity(model)
 
-
     async def add_bulk(self, data: Sequence[BaseModel]):
         add_data_stmt = (
             insert(self.model)
@@ -71,7 +69,7 @@ class BaseRepository:
             print(e)
 
     async def edit(
-        self, data: BaseModel, exclude_unset: bool = False, **filter_by
+            self, data: BaseModel, exclude_unset: bool = False, **filter_by
     ) -> None:
         update_data_stmt = (
             update(self.model)
@@ -81,17 +79,13 @@ class BaseRepository:
         )
         res = await self.session.execute(update_data_stmt)
         try:
-            updated_data = res.scalars().all()
+            updated_data = res.scalars().one()
             return updated_data
-        except IntegrityError:
-            raise  ObjectNotFoundException
-
-    async def delete(self, **filter_by):
-        find_one = await self.session.execute(select(self.model).filter_by(**filter_by))
-        try:
-            find_one.scalars().one()
+        # except IntegrityError:
+        #     raise ObjectNotFoundException
         except NoResultFound:
             raise ObjectNotFoundException
-        delete_stmt = delete(self.model).filter_by(**filter_by).returning(self.model)
-        res = await self.session.execute(delete_stmt)
-        return res.scalars().one()
+
+    async def delete(self, **filter_by):
+        delete_stmt = delete(self.model).filter_by(**filter_by).returning(self.model).returning()
+        await self.session.execute(delete_stmt)
