@@ -26,3 +26,11 @@ class BookingService(BaseService):
             logging.error(f" All rooms are booked from {_booking_data.date_from} to {booking_data.date_to} room_id: {_booking_data.room_id}")
             raise
 
+
+    async def get_my_books(self, user_id):
+        return await self.db.bookings.get_filtered(user_id=user_id)
+
+
+    async def get_all_books(self):
+        return await self.db.bookings.get_all()
+

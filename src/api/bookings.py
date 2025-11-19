@@ -10,18 +10,18 @@ router = APIRouter(prefix="/bookings", tags=["Book room"])
 
 @router.get("")
 async def get_all_bookings(db: DBDep):
-    return await db.bookings.get_all()
+    return await BookingService(db).get_all_books()
 
 
 @router.get("/me")
 async def get_my_bookings(db: DBDep, user_id: UserIdDep):
-    return await db.bookings.get_filtered(user_id=user_id)
+    return await BookingService(db).get_my_books(user_id=user_id)
 
 
 @router.post("")
 async def book_room(db: DBDep, user_id: UserIdDep, booking_data: BookingsAddRequest):
     try:
-        booking= await BookingService(db).book_room(booking_data=booking_data,user_id= user_id)
+        booking = await BookingService(db).book_room(booking_data=booking_data, user_id=user_id)
     except ObjectNotFoundException:
         raise RoomNotFoundHttpException
     except AllRoomsAreBookedException:

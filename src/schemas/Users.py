@@ -1,7 +1,6 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 from datetime import datetime
 
-
 class UserRequestAdd(BaseModel):
     email: EmailStr
     password: str
